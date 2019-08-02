@@ -1,0 +1,5 @@
+# Default ignored files
+.idea/
+*.log
+*.exe
+logs/
