@@ -4,15 +4,17 @@ import (
 	"strconv"
 )
 
-//服务端随机数,如果要自己生成，务必将其写到json的serverRandomness中
-const serverRandomness string = "H2ulzLlh7E0="
-
-func toLeaseCreateJson(clientRandomness string, guid string, offline bool, validFrom string, validUntil string) string {
+func toLeaseCreateJson(clientRandomness string, serverRandomness string, guid string, offline bool, validFrom string, validUntil string) (res string) {
 	var s2 string
 	if offline {
 		s2 = clientRandomness + ";" + serverRandomness + ";" + guid + ";" + strconv.FormatBool(offline) + ";" + validFrom + ";" + validUntil
 	} else {
 		s2 = clientRandomness + ";" + serverRandomness + ";" + guid + ";" + strconv.FormatBool(offline)
 	}
-	return s2
+	signature, err := signWithSha1([]byte(s2))
+	if err != nil {
+		return
+	}
+	res = encodeBase64(signature)
+	return
 }

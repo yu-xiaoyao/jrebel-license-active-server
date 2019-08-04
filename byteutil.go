@@ -14,3 +14,11 @@ func decodeBase64(str string) (res []byte) {
 	}
 	return
 }
+
+func encodeBase64(data []byte) (res string) {
+	if data == nil {
+		return
+	}
+	res = base64.StdEncoding.EncodeToString(data)
+	return
+}
