@@ -11,14 +11,20 @@ import (
 	"time"
 )
 
+func loggingRequest(tag string, r *http.Request) {
+	fmt.Printf("%s --- %s\n", time.Now(), tag)
+}
+
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	loggingRequest("indexHandler", r)
 	w.Header().Set("content-type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
-	//port := 1000
-	//_, _ = fmt.Fprintf(w, html)
+	_, _ = fmt.Fprintf(w, "")
 }
 
 func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
+	loggingRequest("jrebelLeasesHandler", r)
+
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 
 	parameter, err := getHttpBodyParameter(r)
@@ -68,6 +74,8 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func jrebelLeases1Handler(w http.ResponseWriter, r *http.Request) {
+	loggingRequest("jrebelLeases1Handler", r)
+
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	parameter, err := getHttpBodyParameter(r)
 	if err != nil {
@@ -86,12 +94,16 @@ func jrebelLeases1Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func jrebelValidateHandler(w http.ResponseWriter, r *http.Request) {
+	loggingRequest("jrebelValidateHandler", r)
+
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
 	_, _ = fmt.Fprintf(w, "%s\n", jrebelValidateJson)
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
+	loggingRequest("pingHandler", r)
+
 	w.Header().Add("content-type", "text/html; charset=utf-8")
 	parameter, err := getHttpBodyParameter(r)
 	if err != nil {

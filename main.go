@@ -1,26 +1,10 @@
 package main
 
 import (
-	"encoding/hex"
-	"fmt"
 	"net/http"
 )
 
 func main() {
-
-	content := "<PingResponse><message></message><responseCode>OK</responseCode><salt>ABCD</salt></PingResponse>"
-
-	signatures, err := signWithMd5([]byte(content))
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(hex.EncodeToString(signatures))
-
-	signature, err := signWithSha1([]byte{0, 0, 0, 0})
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(signature)
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/jrebel/leases", jrebelLeasesHandler)
