@@ -17,3 +17,10 @@ go build ./
 - GOARCH:
     - amd64 : 64位
     - 386:  : 32位
+    
+## 运行
+默认端口: 12345
+```shell
+# 自定义端口
+./license-active-server --port=5555
+```
