@@ -1,10 +1,40 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 )
 
+var serverPort = 12345
+
 func main() {
+	if len(os.Args) > 1 {
+		for k, v := range os.Args {
+			if k == 0 {
+				continue
+			}
+			arg := strings.TrimSpace(v)
+			hasPortL := strings.HasPrefix(arg, "--port=")
+			hasPortS := strings.HasPrefix(arg, "-p=")
+			if hasPortL {
+				i, err := strconv.ParseInt(strings.ReplaceAll(arg, "--port=", ""), 10, 32)
+				if err == nil {
+					serverPort = int(i)
+					break
+				}
+			}
+			if hasPortS {
+				i, err := strconv.ParseInt(strings.ReplaceAll(arg, "-p=", ""), 10, 32)
+				if err == nil {
+					serverPort = int(i)
+					break
+				}
+			}
+		}
+	}
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/jrebel/leases", jrebelLeasesHandler)
@@ -16,5 +46,7 @@ func main() {
 	http.HandleFunc("/rpc/obtainTicket.action", obtainTicketHandler)
 	http.HandleFunc("/rpc/releaseTicket.action", releaseTicketHandler)
 
-	_ = http.ListenAndServe(":12345", nil)
+	fmt.Printf("start server with port = %d\n", serverPort)
+
+	_ = http.ListenAndServe(":"+strconv.Itoa(serverPort), nil)
 }

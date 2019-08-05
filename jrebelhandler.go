@@ -19,7 +19,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	loggingRequest("indexHandler", r)
 	w.Header().Set("content-type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
-	_, _ = fmt.Fprintf(w, "")
+	html := `<h1>Hello,This is a Jrebel & JetBrains License Server!</h1>
+<p>License Server started at http://localhost:%d
+<p>JetBrains Activation address was: <span style='color:red'>http://localhost:%d/
+<p>JRebel 7.1 and earlier version Activation address was: <span style='color:red'>http://localhost:%d/{tokenname}</span>, with any email."
+<p>JRebel 2018.1 and later version Activation address was: http://localhost:%d/{guid}(eg:<span style='color:red'> http://localhost:%d/%s </span>), with any email.`
+	_, _ = fmt.Fprintf(w, html, serverPort, serverPort, serverPort, serverPort, serverPort, newUUIDV4String())
 }
 
 func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
@@ -131,12 +136,64 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 
 func obtainTicketHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("content-type", "application/json; charset=utf-8")
-	w.WriteHeader(200)
+
+	parameter, err := getHttpBodyParameter(r)
+	if err != nil {
+		responseError(w, err, 403)
+		return
+	}
+	salt := parameter.Get("salt")
+	username := parameter.Get("userName")
+	prolongationPeriod := "607875500"
+	if salt == "" || username == "" {
+		w.WriteHeader(403)
+		_, _ = fmt.Fprintln(w)
+	} else {
+		w.WriteHeader(200)
+		xmlContent := "<ObtainTicketResponse><message></message><prolongationPeriod>" + prolongationPeriod + "</prolongationPeriod><responseCode>OK</responseCode><salt>" + salt + "</salt><ticketId>1</ticketId><ticketProperties>licensee=" + username + "\tlicenseType=0\t</ticketProperties></ObtainTicketResponse>"
+		signature, err := signWithMd5([]byte(xmlContent))
+		if err != nil {
+			w.WriteHeader(403)
+			_, _ = fmt.Fprintf(w, "%s\n", err)
+		} else {
+			body := "<!-- " + hex.EncodeToString(signature) + " -->\n" + xmlContent
+			w.WriteHeader(200)
+			_, _ = fmt.Fprintf(w, "%s\n", body)
+		}
+	}
 
 }
 func releaseTicketHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello there!\n")
+	w.Header().Add("content-type", "text/html; charset=utf-8")
+	parameter, err := getHttpBodyParameter(r)
+	if err != nil {
+		responseError(w, err, 403)
+		return
+	}
+	salt := parameter.Get("salt")
+	if salt == "" {
+		w.WriteHeader(403)
+		_, _ = fmt.Fprintln(w)
+	} else {
+		xmlContent := "<ReleaseTicketResponse><message></message><responseCode>OK</responseCode><salt>" + salt + "</salt></ReleaseTicketResponse>"
+		signature, err := signWithMd5([]byte(xmlContent))
+		if err != nil {
+			w.WriteHeader(403)
+			_, _ = fmt.Fprintf(w, "%s\n", err)
+		} else {
+			body := "<!-- " + hex.EncodeToString(signature) + " -->\n" + xmlContent
+			w.WriteHeader(200)
+			_, _ = fmt.Fprintf(w, "%s\n", body)
+		}
+	}
+
 }
+
+func responseError(w http.ResponseWriter, err error, code int) {
+	w.WriteHeader(403)
+	_, _ = fmt.Fprintf(w, "%s\n", err)
+}
+
 func response(w http.ResponseWriter, resp interface{}) {
 	bodyData, err := json.Marshal(&resp)
 	if err != nil {
