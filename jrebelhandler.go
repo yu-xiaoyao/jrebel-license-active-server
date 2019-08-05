@@ -17,14 +17,15 @@ func loggingRequest(tag string, r *http.Request) {
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	loggingRequest("indexHandler", r)
+	host := "http://" + r.Host
+
 	w.Header().Set("content-type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
 	html := `<h1>Hello,This is a Jrebel & JetBrains License Server!</h1>
-<p>License Server started at http://localhost:%d
-<p>JetBrains Activation address was: <span style='color:red'>http://localhost:%d/
-<p>JRebel 7.1 and earlier version Activation address was: <span style='color:red'>http://localhost:%d/{tokenname}</span>, with any email."
-<p>JRebel 2018.1 and later version Activation address was: http://localhost:%d/{guid}(eg:<span style='color:red'> http://localhost:%d/%s </span>), with any email.`
-	_, _ = fmt.Fprintf(w, html, serverPort, serverPort, serverPort, serverPort, serverPort, newUUIDV4String())
+<p>License Server started at %s
+<p>JRebel 7.1 and earlier version Activation address was: <span style='color:red'>%s/{tokenname}</span>, with any email."
+<p>JRebel 2018.1 and later version Activation address was: %s/{guid}(eg:<span style='color:red'> %s/%s </span>), with any email.`
+	_, _ = fmt.Fprintf(w, html, host, host, host, host, newUUIDV4String())
 }
 
 func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {

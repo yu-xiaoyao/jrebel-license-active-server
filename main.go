@@ -8,9 +8,8 @@ import (
 	"strings"
 )
 
-var serverPort = 12345
-
 func main() {
+	serverPort := 12345
 	if len(os.Args) > 1 {
 		for k, v := range os.Args {
 			if k == 0 {
