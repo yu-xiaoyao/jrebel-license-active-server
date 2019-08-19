@@ -18,6 +18,16 @@ go build ./
     - amd64 : 64位
     - 386:  : 32位
     
+## Mac编译
+```shell
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./
+```    
+
+## docker
+```shell
+docker run --rm --env GOPROXY=https://goproxy.cn -v "$PWD":/root -w /root/src/project/main golang:latest go build ./ -v 
+```
+    
 ## 运行
 默认端口: 12345
 ```shell
