@@ -48,7 +48,7 @@ jobs:
       with:
         files: |
           build-bin/jrebel-license-active-server-linux_amd64
-          build-bin/jrebel-license-active-server-darwin_amd64
+          build-bin/jrebel-license-active-server-darwin_amd64.app
           build-bin/jrebel-license-active-server-windows_amd64.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
