@@ -6,3 +6,4 @@ logs/
 
 # 生成的文件
 license-active-server
+build-bin/
