@@ -55,6 +55,7 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 
 	validFrom := "null"
 	validUntil := "null"
+	var responseBody = jRebelLeases
 	if offline {
 		clientTime := parameter.Get("clientTime")
 		_ = parameter.Get("offlineDays")
@@ -67,11 +68,14 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 		expTime := int64(180 * 24 * 60 * 60 * 100)
 		validFrom = clientTime
 		validUntil = strconv.FormatInt(startTimeInt+expTime, 10)
+
+		responseBody.Offline = offline
+		responseBody.ValidFrom, _ = strconv.ParseInt(validFrom, 10, 64)
+		responseBody.ValidUntil, _ = strconv.ParseInt(validUntil, 10, 64)
 	}
 	serverRandomness := newServerRandomness()
 	signature := toLeaseCreateJson(clientRandomness, serverRandomness, guid, offline, validFrom, validUntil)
 
-	var responseBody = jRebelLeases
 	responseBody.ServerRandomness = serverRandomness
 	responseBody.Signature = signature
 	responseBody.Company = username
