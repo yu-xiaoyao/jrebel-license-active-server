@@ -1,39 +1,58 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 )
 
-func main() {
-	serverPort := 12345
-	if len(os.Args) > 1 {
-		for k, v := range os.Args {
-			if k == 0 {
-				continue
+type Config struct {
+	Port           int
+	OfflineDefault bool
+	OfflineDays    int
+	LogLevel       int64
+}
+
+var config = &Config{
+	Port:           12345,
+	OfflineDefault: true,
+	OfflineDays:    30,
+	LogLevel:       Info,
+}
+
+var logger = NewLogger(os.Stdout, Info, log.Ldate|log.Ltime)
+
+func initConfig(args []string) {
+	for _, v := range os.Args {
+		if strings.HasPrefix(v, "--port=") {
+			i, err := strconv.ParseInt(strings.ReplaceAll(v, "--port=", ""), 10, 32)
+			if err == nil {
+				config.Port = int(i)
 			}
-			arg := strings.TrimSpace(v)
-			hasPortL := strings.HasPrefix(arg, "--port=")
-			hasPortS := strings.HasPrefix(arg, "-p=")
-			if hasPortL {
-				i, err := strconv.ParseInt(strings.ReplaceAll(arg, "--port=", ""), 10, 32)
-				if err == nil {
-					serverPort = int(i)
-					break
-				}
+		} else if strings.HasPrefix(v, "-p=") {
+			i, err := strconv.ParseInt(strings.ReplaceAll(v, "-p=", ""), 10, 32)
+			if err == nil {
+				config.Port = int(i)
 			}
-			if hasPortS {
-				i, err := strconv.ParseInt(strings.ReplaceAll(arg, "-p=", ""), 10, 32)
-				if err == nil {
-					serverPort = int(i)
-					break
+		}
+
+		if strings.HasPrefix(v, "--logLevel=") {
+			i, err := strconv.ParseInt(strings.ReplaceAll(v, "--logLevel=", ""), 10, 32)
+			if err == nil {
+				if i >= Debug && i <= Error {
+					config.LogLevel = i
 				}
 			}
 		}
+
 	}
+}
+
+func main() {
+	initConfig(os.Args[1:])
+	logger.SetLevel(config.LogLevel)
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/jrebel/leases", jrebelLeasesHandler)
@@ -45,7 +64,10 @@ func main() {
 	http.HandleFunc("/rpc/obtainTicket.action", obtainTicketHandler)
 	http.HandleFunc("/rpc/releaseTicket.action", releaseTicketHandler)
 
-	fmt.Printf("start server with port = %d\n", serverPort)
+	logger.Infof("Start server with port = %d\n", config.Port)
 
-	_ = http.ListenAndServe(":"+strconv.Itoa(serverPort), nil)
+	err := http.ListenAndServe(":"+strconv.Itoa(config.Port), nil)
+	if err != nil {
+		logger.Errorf("Start server failed. cause: %v\n", err)
+	}
 }
