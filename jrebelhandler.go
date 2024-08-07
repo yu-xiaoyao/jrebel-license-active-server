@@ -4,19 +4,30 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 )
 
-func loggingRequest(tag string, r *http.Request) {
-	fmt.Printf("%s --- %s\n", time.Now(), tag)
+func loggingRequest(r *http.Request) {
+	query := r.URL.RawQuery
+	if query != "" {
+		query = "?" + query
+	}
+
+	logger.Infof("--> %s %s%s %s\n", r.Method, r.URL.Path, query, r.Proto)
+
+	contentType := r.Header.Get("Content-Type")
+	logger.Debugf("Content-Type: %s\n", contentType)
+	logger.Debugf("Host: %s\n", r.Host)
+	logger.Debugf("RemoteAddr: %s\n", r.RemoteAddr)
+	logger.Debugf("User-Agent: %s\n", r.UserAgent())
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	loggingRequest("indexHandler", r)
+	loggingRequest(r)
 	host := "http://" + r.Host
 
 	w.Header().Set("content-type", "text/html; charset=utf-8")
@@ -29,7 +40,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
-	loggingRequest("jrebelLeasesHandler", r)
+	loggingRequest(r)
 
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 
@@ -50,7 +61,8 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	offline, err := strconv.ParseBool(parameter.Get("offline"))
 	if err != nil {
-		offline = false
+		// default true , for new jrebel version
+		offline = config.OfflineDefault
 	}
 
 	validFrom := "null"
@@ -58,21 +70,28 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 	var responseBody = jRebelLeases
 	if offline {
 		clientTime := parameter.Get("clientTime")
-		_ = parameter.Get("offlineDays")
+		offlineDays := parameter.Get("offlineDays")
 
 		startTimeInt, err := strconv.ParseInt(clientTime, 10, 64)
 		if err != nil {
 			startTimeInt = int64(time.Now().Second()) * 1000
 		}
-		// 过期时间
-		expTime := int64(180 * 24 * 60 * 60 * 100)
-		validFrom = clientTime
-		validUntil = strconv.FormatInt(startTimeInt+expTime, 10)
 
+		offlineDaysInt, err := strconv.ParseInt(offlineDays, 10, 64)
+		if err != nil {
+			offlineDaysInt = int64(config.OfflineDays)
+		}
+
+		// 过期时间
+		expireTime := startTimeInt + (offlineDaysInt * 24 * 60 * 60 * 1000)
 		responseBody.Offline = offline
-		responseBody.ValidFrom, _ = strconv.ParseInt(validFrom, 10, 64)
-		responseBody.ValidUntil, _ = strconv.ParseInt(validUntil, 10, 64)
+		responseBody.ValidFrom = startTimeInt
+		responseBody.ValidUntil = expireTime
+
+		validFrom = clientTime
+		validUntil = strconv.FormatInt(expireTime, 10)
 	}
+
 	serverRandomness := newServerRandomness()
 	signature := toLeaseCreateJson(clientRandomness, serverRandomness, guid, offline, validFrom, validUntil)
 
@@ -84,7 +103,7 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func jrebelLeases1Handler(w http.ResponseWriter, r *http.Request) {
-	loggingRequest("jrebelLeases1Handler", r)
+	loggingRequest(r)
 
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	parameter, err := getHttpBodyParameter(r)
@@ -104,7 +123,7 @@ func jrebelLeases1Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func jrebelValidateHandler(w http.ResponseWriter, r *http.Request) {
-	loggingRequest("jrebelValidateHandler", r)
+	loggingRequest(r)
 
 	w.Header().Add("content-type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
@@ -112,7 +131,7 @@ func jrebelValidateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
-	loggingRequest("pingHandler", r)
+	loggingRequest(r)
 
 	w.Header().Add("content-type", "text/html; charset=utf-8")
 	parameter, err := getHttpBodyParameter(r)
@@ -211,7 +230,7 @@ func response(w http.ResponseWriter, resp interface{}) {
 }
 
 func getHttpBodyParameter(r *http.Request) (params url.Values, err error) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -227,6 +246,6 @@ func getHttpBodyParameter(r *http.Request) (params url.Values, err error) {
 		RawQuery:   s,
 		Fragment:   "",
 	}
-	fmt.Println(s)
+	// fmt.Println(s)
 	return ps.Query(), err
 }

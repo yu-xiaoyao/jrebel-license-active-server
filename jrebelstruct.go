@@ -12,7 +12,7 @@ func init() {
 	_ = json.Unmarshal([]byte(jrebelValidateJson), &jrebelValidate)
 }
 
-//language=JSON
+// language=JSON
 const jrebelLeasesJson = `{
     "serverVersion": "3.2.4",
     "serverProtocolVersion": "1.1",
@@ -34,8 +34,10 @@ const jrebelLeasesJson = `{
         
     ],
     "licenseValidFrom": 1490544001000,
-    "licenseValidUntil": 1691839999000
+    "licenseValidUntil": 1891839999000
 }`
+
+// test: "licenseValidUntil": 1691839999000 ==> 1891839999000
 
 type JRebelLeasesStruct struct {
 	ServerVersion         string        `json:"serverVersion"`
@@ -59,7 +61,7 @@ type JRebelLeasesStruct struct {
 	LicenseValidUntil     int64         `json:"licenseValidUntil"`
 }
 
-//language=JSON
+// language=JSON
 const jrebelLeases1Json = `{
     "serverVersion": "3.2.4",
     "serverProtocolVersion": "1.1",
@@ -82,7 +84,7 @@ type JrebelLeases1Struct struct {
 	StatusMessage         interface{} `json:"statusMessage"`
 }
 
-//language=JSON
+// language=JSON
 const jrebelValidateJson = `{
     "serverVersion": "3.2.4",
     "serverProtocolVersion": "1.1",
