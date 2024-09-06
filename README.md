@@ -1,13 +1,18 @@
 # Jrebel 激活服务器 By GoLang
-- [实现原理和实现代码参考Java版本:https://gitee.com/gsls200808/JrebelLicenseServerforJava](https://gitee.com/gsls200808/JrebelLicenseServerforJava)
-
->Java开发者刚刚学GO,练手....
-
 
 
 ## 直接下载(Win,Linux,Mac)
 
 - [https://github.com/yu-xiaoyao/jrebel-license-active-server/releases](https://github.com/yu-xiaoyao/jrebel-license-active-server/releases)
+
+
+## Test Server
+- http://117.50.194.13:12345
+
+Example:
+```shell
+http://117.50.194.13:12345/524f1d03-d1d8-5e94-a099-042736d40bd9
+```
 
 ## Win编译
 ```shell
