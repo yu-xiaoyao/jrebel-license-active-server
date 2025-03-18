@@ -11,28 +11,28 @@ jobs:
   build-job:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v5
       with:
-        go-version: 1.16
+        go-version: 1.19
     - name: Config Linux amd64
       run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64
     - name: Build Linux amd64
       run: go build -o build-bin/jrebel-license-active-server-linux_amd64 ./
-      
+
     - name: Config MacOS amd64
       run: CGO_ENABLED=0 GOOS=darwin GOARCH=amd64
     - name: Build MacOS amd64
       run: go build -o build-bin/jrebel-license-active-server-darwin_amd64 ./
-          
+
     - name: Config Windows amd64
       run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64
     - name: Build Windows amd64
-      run: go build -o build-bin/jrebel-license-active-server-windows_amd64.exe ./  
-      
+      run: go build -o build-bin/jrebel-license-active-server-windows_amd64.exe ./
+
     - name: Upload Bin
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: startsWith(github.ref, 'refs/tags/')
       with:
         name: exec file
@@ -41,9 +41,9 @@ jobs:
           build-bin/jrebel-license-active-server-darwin_amd64
           build-bin/jrebel-license-active-server-windows_amd64.exe
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}            
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
