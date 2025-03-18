@@ -32,7 +32,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("content-type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
-	html := `<h1>Hello,This is a Jrebel & JetBrains License Server!</h1>
+	html := `<h1>Hello,This is a Jrebel License Server!</h1>
 <p>License Server started at %s
 <p>JRebel 7.1 and earlier version Activation address was: <span style='color:red'>%s/{tokenname}</span>, with any email."
 <p>JRebel 2018.1 and later version Activation address was: %s/{guid}(eg:<span style='color:red'> %s/%s </span>), with any email.`
