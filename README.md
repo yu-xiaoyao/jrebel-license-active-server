@@ -58,4 +58,6 @@ docker run --rm -p 12345:12345 jrebel-license-active-server:latest
 ```shell
 # 自定义端口
 ./license-active-server --port=5555
+# index page show as https
+./license-active-server --port=5555 --schema=https
 ```

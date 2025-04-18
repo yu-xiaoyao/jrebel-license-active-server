@@ -1,11 +1,11 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 )
 
 type Config struct {
@@ -13,6 +13,7 @@ type Config struct {
 	OfflineDefault bool
 	OfflineDays    int
 	LogLevel       int64
+	Schema         string // 新增 schema 字段
 }
 
 var config = &Config{
@@ -20,40 +21,26 @@ var config = &Config{
 	OfflineDefault: true,
 	OfflineDays:    30,
 	LogLevel:       Info,
+	Schema:         "http", // 默认协议为 http,https
 }
 
 var logger = NewLogger(os.Stdout, Info, log.Ldate|log.Ltime)
 
-func initConfig(args []string) {
-	for _, v := range os.Args {
-		if strings.HasPrefix(v, "--port=") {
-			i, err := strconv.ParseInt(strings.ReplaceAll(v, "--port=", ""), 10, 32)
-			if err == nil {
-				config.Port = int(i)
-			}
-		} else if strings.HasPrefix(v, "-p=") {
-			i, err := strconv.ParseInt(strings.ReplaceAll(v, "-p=", ""), 10, 32)
-			if err == nil {
-				config.Port = int(i)
-			}
-		}
+func init() {
+	portPtr := flag.Int("port", config.Port, "Server port, value range 1-65535")
+	logLevelPtr := flag.Int64("logLevel", config.LogLevel, "Log level, value range 1-4")
+	schemaPtr := flag.String("schema", config.Schema, "Protocol schema (http or https)")
 
-		if strings.HasPrefix(v, "--logLevel=") {
-			i, err := strconv.ParseInt(strings.ReplaceAll(v, "--logLevel=", ""), 10, 32)
-			if err == nil {
-				if i >= Debug && i <= Error {
-					config.LogLevel = i
-				}
-			}
-		}
+	flag.Parse()
 
-	}
+	config.Port = *portPtr
+	config.LogLevel = *logLevelPtr
+	config.Schema = *schemaPtr
+
+	logger.SetLevel(config.LogLevel)
 }
 
 func main() {
-	initConfig(os.Args[1:])
-	logger.SetLevel(config.LogLevel)
-
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/jrebel/leases", jrebelLeasesHandler)
 	http.HandleFunc("/jrebel/leases/1", jrebelLeases1Handler)
@@ -64,7 +51,7 @@ func main() {
 	http.HandleFunc("/rpc/obtainTicket.action", obtainTicketHandler)
 	http.HandleFunc("/rpc/releaseTicket.action", releaseTicketHandler)
 
-	logger.Infof("Start server with port = %d\n", config.Port)
+	logger.Infof("Start server with port = %d, schema = %s\n", config.Port, config.Schema)
 
 	err := http.ListenAndServe(":"+strconv.Itoa(config.Port), nil)
 	if err != nil {

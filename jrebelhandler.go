@@ -28,7 +28,7 @@ func loggingRequest(r *http.Request) {
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	loggingRequest(r)
-	host := "http://" + r.Host
+	host := config.Schema + "://" + r.Host
 
 	w.Header().Set("content-type", "text/html; charset=utf-8")
 	w.WriteHeader(200)
