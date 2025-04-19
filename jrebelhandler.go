@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,32 +14,25 @@ import (
 	"time"
 )
 
+var indexTemplate *template.Template
+
+func init() {
+	indexTemplate, _ = template.New("index").Parse(indexTemplateHtml)
+}
+
 func loggingRequest(r *http.Request) {
 	query := r.URL.RawQuery
 	if query != "" {
 		query = "?" + query
 	}
+	logger.Infof("--> %s %s%s. [%s] [%s]\n", r.Method, r.URL.Path, query, r.RemoteAddr, r.UserAgent())
 
-	logger.Infof("--> %s %s%s %s\n", r.Method, r.URL.Path, query, r.Proto)
-
-	contentType := r.Header.Get("Content-Type")
-	logger.Debugf("Content-Type: %s\n", contentType)
-	logger.Debugf("Host: %s\n", r.Host)
-	logger.Debugf("RemoteAddr: %s\n", r.RemoteAddr)
-	logger.Debugf("User-Agent: %s\n", r.UserAgent())
-}
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	loggingRequest(r)
-	host := config.Schema + "://" + r.Host
-
-	w.Header().Set("content-type", "text/html; charset=utf-8")
-	w.WriteHeader(200)
-	html := `<h1>Hello,This is a Jrebel License Server!</h1>
-<p>License Server started at %s
-<p>JRebel 7.1 and earlier version Activation address was: <span style='color:red'>%s/{tokenname}</span>, with any email."
-<p>JRebel 2018.1 and later version Activation address was: %s/{guid}(eg:<span style='color:red'> %s/%s </span>), with any email.`
-	_, _ = fmt.Fprintf(w, html, host, host, host, host, newUUIDV4String())
+	// debug info
+	//contentType := r.Header.Get("Content-Type")
+	//logger.Debugf("Content-Type: %s\n", contentType)
+	//logger.Debugf("Host: %s\n", r.Host)
+	//logger.Debugf("RemoteAddr: %s\n", r.RemoteAddr)
+	//logger.Debugf("User-Agent: %s\n", r.UserAgent())
 }
 
 func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
@@ -251,3 +245,292 @@ func getHttpBodyParameter(r *http.Request) (params url.Values, err error) {
 	// fmt.Println(s)
 	return ps.Query(), err
 }
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	loggingRequest(r)
+
+	var host string
+	if len(config.ExportHost) == 0 {
+		host = config.ExportSchema + "://" + r.Host
+	} else {
+		host = config.ExportSchema + "://" + config.ExportHost
+	}
+	uuid := newUUIDV4String()
+
+	w.Header().Set("content-type", "text/html; charset=utf-8")
+	w.WriteHeader(200)
+
+	if config.NewIndex {
+		data := struct {
+			Host string
+			UUID string
+		}{
+			Host: host,
+			UUID: uuid,
+		}
+		err := indexTemplate.Execute(w, data)
+		if err == nil {
+			return
+		} else {
+			logger.Warnf("template execute error: %v\n", err)
+		}
+	}
+
+	// template error, fallback simple
+	html := `<h1>Hello,This is a Jrebel License Server!</h1>
+			<p>License Server started at %s
+			<p>JRebel 7.1 and earlier version Activation address was: <span style='color:red'>%s/{tokenname}</span>, with any email."
+			<p>JRebel 2018.1 and later version Activation address was: %s/{guid}(eg:<span style='color:red'> %s/%s </span>), with any email.`
+	_, _ = fmt.Fprintf(w, html, host, host, host, host, uuid)
+
+}
+
+const indexTemplateHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JRebel License Server</title>
+    <style>
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #f5f5f5;
+            --accent-color: #ff5252;
+            --text-color: #333;
+            --light-text: #666;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 30px;
+            position: relative;
+        }
+        
+        .language-switch {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+        }
+        
+        .language-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+            transition: var(--transition);
+        }
+        
+        .language-btn:hover, .language-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .info-card {
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-card h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .activation-url {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .url-text {
+            flex-grow: 1;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        .copy-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .copy-btn:hover {
+            background-color: #3a5ae8;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--light-text);
+            font-size: 14px;
+            border-top: 1px solid #eee;
+        }
+        
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px auto;
+            }
+            
+            header {
+                padding: 15px 20px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .language-switch {
+                position: static;
+                margin-top: 10px;
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="language-switch">
+                <button class="language-btn" data-lang="zh">中文</button>
+                <button class="language-btn active" data-lang="en">English</button>
+            </div>
+            <h1 class="lang-zh" style="display:none;">JRebel 许可证服务器</h1>
+            <h1 class="lang-en">JRebel License Server</h1>
+        </header>
+        
+        <div class="content">
+            <div class="info-card">
+                <h2 class="lang-zh" style="display:none;">服务器信息</h2>
+                <h2 class="lang-en">Server Information</h2>
+                
+                <p class="lang-zh" style="display:none;">许可证服务器已启动于：</p>
+                <p class="lang-en">License Server started at:</p>
+                
+                <div class="activation-url">
+                    <span class="url-text">{{.Host}}</span>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h2 class="lang-zh" style="display:none;">JRebel 7.1 及更早版本</h2>
+                <h2 class="lang-en">JRebel 7.1 and Earlier Versions</h2>
+                
+                <p class="lang-zh" style="display:none;">激活地址（使用任意邮箱）：</p>
+                <p class="lang-en">Activation address (with any email):</p>
+                
+                <div class="activation-url">
+                    <span class="url-text">{{.Host}}/<span class="highlight">{tokenname}</span></span>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h2 class="lang-zh" style="display:none;">JRebel 2018.1 及更高版本</h2>
+                <h2 class="lang-en">JRebel 2018.1 and Later Versions</h2>
+                
+                <p class="lang-zh" style="display:none;">激活地址（使用任意邮箱地址）：</p>
+                <p class="lang-en">Activation address (with any email address):</p>
+                
+                <div class="activation-url">
+                    <span class="url-text">{{.Host}}/<span class="highlight">{{.UUID}}</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p class="lang-zh" style="display:none;">
+                <a href="https://github.com/yu-xiaoyao/jrebel-license-active-server" target="_blank">从 2019 年开发</a> 
+            </p>
+            <p class="lang-en">
+                <a href="https://github.com/yu-xiaoyao/jrebel-license-active-server" target="_blank">Developed from 2019 year</a> 
+            </p>
+        </footer>
+    </div>
+
+</body>
+</html>`

@@ -15,7 +15,9 @@ type Config struct {
 	OfflineDefault bool
 	OfflineDays    int
 	LogLevel       int64
-	Schema         string // 新增 schema 字段
+	ExportSchema   string
+	ExportHost     string
+	NewIndex       bool
 }
 
 var config = &Config{
@@ -23,7 +25,9 @@ var config = &Config{
 	OfflineDefault: true,
 	OfflineDays:    30,
 	LogLevel:       Info,
-	Schema:         "http", // 默认协议为 http,https
+	ExportSchema:   "http",
+	ExportHost:     "", // default is request ip
+	NewIndex:       true,
 }
 
 var logger = NewLogger(os.Stdout, Info, log.Ldate|log.Ltime)
@@ -31,13 +35,17 @@ var logger = NewLogger(os.Stdout, Info, log.Ldate|log.Ltime)
 func init() {
 	portPtr := flag.Int("port", config.Port, "Server port, value range 1-65535")
 	logLevelPtr := flag.Int64("logLevel", config.LogLevel, "Log level, value range 1-4")
-	schemaPtr := flag.String("schema", config.Schema, "Protocol schema (http or https)")
+	exportSchemaPtr := flag.String("exportSchema", config.ExportSchema, "Index page export schema (http or https)")
+	exportHostPtr := flag.String("exportHost", "", "Index page export host, ip or domain")
+	newIndexPtr := flag.Bool("newIndex", config.NewIndex, "Use New Index Page (true or false)")
 
 	flag.Parse()
 
 	config.Port = *portPtr
 	config.LogLevel = *logLevelPtr
-	config.Schema = *schemaPtr
+	config.ExportSchema = *exportSchemaPtr
+	config.ExportHost = *exportHostPtr
+	config.NewIndex = *newIndexPtr
 
 	logger.SetLevel(config.LogLevel)
 }
@@ -53,7 +61,7 @@ func main() {
 	http.HandleFunc("/rpc/obtainTicket.action", obtainTicketHandler)
 	http.HandleFunc("/rpc/releaseTicket.action", releaseTicketHandler)
 
-	logger.Infof("Start server with port = %d, schema = %s\n", config.Port, config.Schema)
+	logger.Infof("Start server with port = %d, schema = %s\n", config.Port, config.ExportSchema)
 
 	err := http.ListenAndServe(":"+strconv.Itoa(config.Port), nil)
 	if err != nil {
