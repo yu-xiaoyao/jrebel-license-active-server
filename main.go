@@ -1,3 +1,5 @@
+// @author: yu-xiaoyao
+// @github: https://github.com/yu-xiaoyao/jrebel-license-active-server
 package main
 
 import (
