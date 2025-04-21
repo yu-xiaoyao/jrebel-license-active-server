@@ -4,6 +4,11 @@ COPY . .
 RUN go build .
 
 FROM golang:latest
+LABEL org.opencontainers.image.author="yu-xiaoyao" \
+    org.opencontainers.image.description="JRebel and XRebel active server" \
+    org.opencontainers.image.source="https://github.com/yu-xiaoyao/jrebel-license-active-server" \
+    org.opencontainers.image.url="https://github.com/yu-xiaoyao/jrebel-license-active-server" \
+    org.opencontainers.image.title="jrebel-license-active-server"
 WORKDIR /app
 COPY --from=builder /build/jrebel-license-active-server .
 ENV TZ=Asia/Shanghai
