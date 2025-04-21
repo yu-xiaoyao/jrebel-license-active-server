@@ -1,9 +1,9 @@
-FROM golang:latest AS builder
+FROM golang:alpine AS builder
 WORKDIR /build
 COPY . .
 RUN go build .
 
-FROM golang:latest
+FROM golang:alpine
 LABEL org.opencontainers.image.author="yu-xiaoyao" \
     org.opencontainers.image.description="JRebel and XRebel active server" \
     org.opencontainers.image.source="https://github.com/yu-xiaoyao/jrebel-license-active-server" \

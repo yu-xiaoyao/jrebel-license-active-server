@@ -54,7 +54,42 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./
 
 ## docker
 
-### Build Image
+### Pull Image
+```shell
+docker pull yuxiaoyao520/jrebel-license-active-server:latest
+```
+
+### Run
+```shell
+docker run -p 12345:12345 --name jrebel-license-active-server yuxiaoyao520/jrebel-license-active-server:latest
+```
+
+### docker-compose
+
+#### Simple
+**docker-compose.yml**
+```yaml
+services:
+  jrebel-license-active-server:
+    image: yuxiaoyao520/jrebel-license-active-server:latest
+    container_name: jrebel-license-active-server
+    ports:
+      - "12345:12345"
+```
+
+#### Add Run Args
+**docker-compose.yml**
+```yaml
+services:
+  jrebel-license-active-server:
+    image: yuxiaoyao520/jrebel-license-active-server:latest
+    container_name: jrebel-license-active-server
+    command: ./jrebel-license-active-server --port=5555 --exportSchema=https --exportHost=jrebel.domain.com
+    ports:
+      - "5555:5555"
+```
+
+### Custom Build Image
 
 ```shell
 docker build -t jrebel-license-active-server .
