@@ -3,7 +3,7 @@ name: Build Jrebel Server
 on:
   push:
     branches:
-      - master
+      - dev
     tags:
       - '*'
 
@@ -11,44 +11,51 @@ jobs:
   build-job:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: 1.19
-    - name: Config Linux amd64
-      run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64
-    - name: Build Linux amd64
-      run: go build -o build-bin/jrebel-license-active-server-linux_amd64 ./
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.24.3
 
-    - name: Config MacOS amd64
-      run: CGO_ENABLED=0 GOOS=darwin GOARCH=amd64
-    - name: Build MacOS amd64
-      run: go build -o build-bin/jrebel-license-active-server-darwin_amd64 ./
+      - name: build linux amd64
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build-bin/jrebel-license-active-server-linux_amd64 ./
+      - name: build linux arm64
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o build-bin/jrebel-license-active-server-linux_arm64 ./
+      - name: build mac amd64
+        run: CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o build-bin/jrebel-license-active-server-darwin_amd64 ./
+      - name: build mac arm64
+        run: CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o build-bin/jrebel-license-active-server-darwin_arm64 ./
+      - name: build windows amd64
+        run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o build-bin/jrebel-license-active-server-windows_amd64.exe ./
 
-    - name: Config Windows amd64
-      run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64
-    - name: Build Windows amd64
-      run: go build -o build-bin/jrebel-license-active-server-windows_amd64.exe ./
+      #    - name: Config Linux amd64
+      #      run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+      #    - name: Build Linux amd64
+      #      run: go build -o build-bin/jrebel-license-active-server-linux_amd64 ./
+      #
+      #    - name: Config MacOS amd64
+      #      run: CGO_ENABLED=0 GOOS=darwin GOARCH=amd64
+      #    - name: Build MacOS amd64
+      #      run: go build -o build-bin/jrebel-license-active-server-darwin_amd64 ./
+      #
+      #    - name: Config Windows amd64
+      #      run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64
+      #    - name: Build Windows amd64
+      #      run: go build -o build-bin/jrebel-license-active-server-windows_amd64.exe ./
 
-    - name: Upload Bin
-      uses: actions/upload-artifact@v4
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        name: exec file
-        path: |
-          build-bin/jrebel-license-active-server-linux_amd64
-          build-bin/jrebel-license-active-server-darwin_amd64
-          build-bin/jrebel-license-active-server-windows_amd64.exe
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Release
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: |
-          build-bin/jrebel-license-active-server-linux_amd64
-          build-bin/jrebel-license-active-server-darwin_amd64
-          build-bin/jrebel-license-active-server-windows_amd64.exe
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: jrebel-active-server
+          path: build-bin/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release artifacts
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: build-bin/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
