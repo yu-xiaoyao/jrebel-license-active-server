@@ -3,7 +3,7 @@ name: Build Jrebel Server
 on:
   push:
     branches:
-      - dev
+      - master
     tags:
       - '*'
 
