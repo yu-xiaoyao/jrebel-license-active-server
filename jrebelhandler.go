@@ -60,9 +60,13 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 		// default true , for new jrebel version
 		offline = config.OfflineDefault
 	}
+	oldGuid := parameter.Get("oldGuid")
+	if (oldGuid != "") {
+		offline = true
+	}
 
-	validFrom := "null"
-	validUntil := "null"
+	validFrom := ""
+	validUntil := ""
 	var responseBody = jRebelLeases
 	if offline {
 		clientTime := parameter.Get("clientTime")
