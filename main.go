@@ -11,23 +11,21 @@ import (
 )
 
 type Config struct {
-	Port           int
-	OfflineDefault bool
-	OfflineDays    int
-	LogLevel       int64
-	ExportSchema   string
-	ExportHost     string
-	NewIndex       bool
+	Port         int
+	OfflineDays  int
+	LogLevel     int64
+	ExportSchema string
+	ExportHost   string
+	NewIndex     bool
 }
 
 var config = &Config{
-	Port:           12345,
-	OfflineDefault: true,
-	OfflineDays:    30,
-	LogLevel:       Info,
-	ExportSchema:   "http",
-	ExportHost:     "", // default is request ip
-	NewIndex:       true,
+	Port:         12345,
+	OfflineDays:  30,
+	LogLevel:     Info,
+	ExportSchema: "http",
+	ExportHost:   "", // default is request ip
+	NewIndex:     true,
 }
 
 var logger = NewLogger(os.Stdout, Info, log.Ldate|log.Ltime)

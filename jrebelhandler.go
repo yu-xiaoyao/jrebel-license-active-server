@@ -63,22 +63,17 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 		_, _ = fmt.Fprint(w)
 		return
 	}
-	offline, err := strconv.ParseBool(parameter.Get("offline"))
-	if err != nil {
-		// active by product JRebel = offline, XRebel = online
-		product := parameter.Get("product")
-		if product == "JRebel" {
-			offline = true
-		} else if product == "XRebel" {
-			offline = false
-		} else {
-			// use config default
-			offline = config.OfflineDefault
-		}
-	}
-	oldGuid := parameter.Get("oldGuid")
-	if (oldGuid != "") {
-		offline = true
+
+	// active by product JRebel = offline, XRebel = online
+	var offline bool
+	product := parameter.Get("product")
+	if product == "XRebel" {
+		offline = false
+	} else {
+		// JRebel
+		//offline, err := strconv.ParseBool(parameter.Get("offline"))
+		oldGuid := parameter.Get("oldGuid")
+		offline = oldGuid != ""
 	}
 
 	validFrom := ""
