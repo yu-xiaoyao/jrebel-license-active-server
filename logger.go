@@ -68,6 +68,10 @@ func (l *SimpleLogger) Debugf(format string, v ...interface{}) {
 	l.debug.Printf(format, v...)
 }
 
+func (l *SimpleLogger) IsDebug() bool {
+	return atomic.LoadInt64(&l.level) <= Debug
+}
+
 func (l *SimpleLogger) Infoln(v ...interface{}) {
 	if atomic.LoadInt64(&l.level) > Info {
 		return
@@ -79,6 +83,9 @@ func (l *SimpleLogger) Infof(format string, v ...interface{}) {
 		return
 	}
 	l.info.Printf(format, v...)
+}
+func (l *SimpleLogger) IsInfo() bool {
+	return atomic.LoadInt64(&l.level) <= Info
 }
 
 func (l *SimpleLogger) Warnln(v ...interface{}) {
@@ -94,6 +101,10 @@ func (l *SimpleLogger) Warnf(format string, v ...interface{}) {
 	l.warn.Printf(format, v...)
 }
 
+func (l *SimpleLogger) IsWarn() bool {
+	return atomic.LoadInt64(&l.level) <= Warn
+}
+
 func (l *SimpleLogger) Errorln(v ...interface{}) {
 	if atomic.LoadInt64(&l.level) > Error {
 		return
@@ -105,4 +116,7 @@ func (l *SimpleLogger) Errorf(format string, v ...interface{}) {
 		return
 	}
 	l.error.Printf(format, v...)
+}
+func (l *SimpleLogger) IsError() bool {
+	return atomic.LoadInt64(&l.level) <= Error
 }

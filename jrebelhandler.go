@@ -25,6 +25,7 @@ func loggingRequest(r *http.Request) {
 	if query != "" {
 		query = "?" + query
 	}
+
 	logger.Infof("--> %s %s%s. [%s] [%s]\n", r.Method, r.URL.Path, query, r.RemoteAddr, r.UserAgent())
 
 	// debug info
@@ -33,6 +34,13 @@ func loggingRequest(r *http.Request) {
 	//logger.Debugf("Host: %s\n", r.Host)
 	//logger.Debugf("RemoteAddr: %s\n", r.RemoteAddr)
 	//logger.Debugf("User-Agent: %s\n", r.UserAgent())
+
+	//if logger.IsDebug() {
+	//	// 读取并打印 Body
+	//	body, _ := io.ReadAll(r.Body)
+	//	logger.Debugf("--> Request Body: %s", body)
+	//	r.Body = io.NopCloser(bytes.NewBuffer(body))
+	//}
 }
 
 func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
@@ -57,8 +65,16 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	offline, err := strconv.ParseBool(parameter.Get("offline"))
 	if err != nil {
-		// default true , for new jrebel version
-		offline = config.OfflineDefault
+		// active by product JRebel = offline, XRebel = online
+		product := parameter.Get("product")
+		if product == "JRebel" {
+			offline = true
+		} else if product == "XRebel" {
+			offline = false
+		} else {
+			// use config default
+			offline = config.OfflineDefault
+		}
 	}
 
 	validFrom := "null"
