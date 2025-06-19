@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -35,12 +36,13 @@ func loggingRequest(r *http.Request) {
 	//logger.Debugf("RemoteAddr: %s\n", r.RemoteAddr)
 	//logger.Debugf("User-Agent: %s\n", r.UserAgent())
 
-	//if logger.IsDebug() {
-	//	// 读取并打印 Body
-	//	body, _ := io.ReadAll(r.Body)
-	//	logger.Debugf("--> Request Body: %s", body)
-	//	r.Body = io.NopCloser(bytes.NewBuffer(body))
-	//}
+	if r.Method == "POST" {
+		if logger.IsDebug() {
+			body, _ := io.ReadAll(r.Body)
+			logger.Debugf("--> Request Body: %s", body)
+			r.Body = io.NopCloser(bytes.NewBuffer(body))
+		}
+	}
 }
 
 func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
@@ -70,10 +72,14 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 	if product == "XRebel" {
 		offline = false
 	} else {
-		// JRebel
-		//offline, err := strconv.ParseBool(parameter.Get("offline"))
+		offline, err = strconv.ParseBool(parameter.Get("offline"))
+		if err != nil {
+			offline = true
+		}
 		oldGuid := parameter.Get("oldGuid")
-		offline = oldGuid != ""
+		if oldGuid != "" {
+			offline = true
+		}
 	}
 
 	validFrom := ""
