@@ -11,21 +11,23 @@ import (
 )
 
 type Config struct {
-	Port         int
-	OfflineDays  int
-	LogLevel     int64
-	ExportSchema string
-	ExportHost   string
-	NewIndex     bool
+	Port           int
+	OfflineDays    int
+	LogLevel       int64
+	ExportSchema   string
+	ExportHost     string
+	NewIndex       bool
+	JrebelWorkMode int
 }
 
 var config = &Config{
-	Port:         12345,
-	OfflineDays:  30,
-	LogLevel:     Info,
-	ExportSchema: "http",
-	ExportHost:   "", // default is request ip
-	NewIndex:     true,
+	Port:           12345,
+	OfflineDays:    30,
+	LogLevel:       Info,
+	ExportSchema:   "http",
+	ExportHost:     "",   // default is request ip
+	NewIndex:       true, // use new index page
+	JrebelWorkMode: 0,    // 0: auto, 1: force offline mode, 2: force online mode, 3: oldGuid
 }
 
 var logger = NewLogger(os.Stdout, Info, log.Ldate|log.Ltime)
@@ -36,6 +38,7 @@ func init() {
 	exportSchemaPtr := flag.String("exportSchema", config.ExportSchema, "Index page export schema (http or https)")
 	exportHostPtr := flag.String("exportHost", "", "Index page export host, ip or domain")
 	newIndexPtr := flag.Bool("newIndex", config.NewIndex, "Use New Index Page (true or false)")
+	jrebelWorkMode := flag.Int("jrebelWorkMode", config.JrebelWorkMode, "Jrebel Wrok mode. 0: auto, 1: force offline mode, 2: force online mode, 3: oldGuid")
 
 	flag.Parse()
 
@@ -44,6 +47,7 @@ func init() {
 	config.ExportSchema = *exportSchemaPtr
 	config.ExportHost = *exportHostPtr
 	config.NewIndex = *newIndexPtr
+	config.JrebelWorkMode = *jrebelWorkMode
 
 	logger.SetLevel(config.LogLevel)
 }

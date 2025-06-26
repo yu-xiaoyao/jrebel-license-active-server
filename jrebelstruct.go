@@ -71,7 +71,8 @@ const jrebelLeases1Json = `{
     "groupType": "managed",
     "statusCode": "SUCCESS",
     "msg": null,
-    "statusMessage": null
+    "statusMessage": null,
+	"signature": "dGVzdA=="
 }
 `
 
@@ -84,6 +85,7 @@ type JrebelLeases1Struct struct {
 	Company               string      `json:"company"`
 	Msg                   interface{} `json:"msg"`
 	StatusMessage         interface{} `json:"statusMessage"`
+	Signature             string      `json:"signature"`
 }
 
 // language=JSON

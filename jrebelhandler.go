@@ -72,14 +72,24 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 	if product == "XRebel" {
 		offline = false
 	} else {
-		offline, err = strconv.ParseBool(parameter.Get("offline"))
-		if err != nil {
+		// Compatibility active test
+		if config.JrebelWorkMode == 1 {
 			offline = true
+		} else if config.JrebelWorkMode == 2 {
+			offline = false
+		} else if config.JrebelWorkMode == 3 {
+			//offline, err = strconv.ParseBool(parameter.Get("offline"))
+			oldGuid := parameter.Get("oldGuid")
+			if oldGuid != "" {
+				offline = true
+			}
+		} else {
+			offline, err = strconv.ParseBool(parameter.Get("offline"))
+			if err != nil {
+				offline = false
+			}
 		}
-		oldGuid := parameter.Get("oldGuid")
-		if oldGuid != "" {
-			offline = true
-		}
+
 	}
 
 	validFrom := ""
