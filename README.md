@@ -15,6 +15,13 @@ Example:
 117.50.194.13:12345/524f1d03-d1d8-5e94-a099-042736d40bd9
 ```
 
+
+### Dev Server Address
+> Offline days set to 180.
+
+- `117.50.194.13:12346`
+
+
 ## 编译
 
 - GOOS

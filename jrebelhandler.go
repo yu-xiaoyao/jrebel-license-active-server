@@ -97,16 +97,23 @@ func jrebelLeasesHandler(w http.ResponseWriter, r *http.Request) {
 	var responseBody = jRebelLeases
 	if offline {
 		clientTime := parameter.Get("clientTime")
-		offlineDays := parameter.Get("offlineDays")
 
 		startTimeInt, err := strconv.ParseInt(clientTime, 10, 64)
 		if err != nil {
 			startTimeInt = int64(time.Now().Second()) * 1000
 		}
 
-		offlineDaysInt, err := strconv.ParseInt(offlineDays, 10, 64)
-		if err != nil {
-			offlineDaysInt = int64(config.OfflineDays)
+		var offlineDaysInt int64
+		if config.IgnoreOfflineDay {
+			offlineDaysInt = config.OfflineDays
+		} else {
+			offlineDays := parameter.Get("offlineDays")
+			days, err := strconv.ParseInt(offlineDays, 10, 64)
+			if err != nil {
+				offlineDaysInt = 7
+			} else {
+				offlineDaysInt = days
+			}
 		}
 
 		// 过期时间

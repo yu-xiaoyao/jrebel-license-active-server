@@ -11,38 +11,44 @@ import (
 )
 
 type Config struct {
-	Port           int
-	OfflineDays    int
-	LogLevel       int64
-	ExportSchema   string
-	ExportHost     string
-	NewIndex       bool
-	JrebelWorkMode int
+	Port             int
+	OfflineDays      int64
+	IgnoreOfflineDay bool
+	LogLevel         int64
+	ExportSchema     string
+	ExportHost       string
+	NewIndex         bool
+	JrebelWorkMode   int
 }
 
 var config = &Config{
-	Port:           12345,
-	OfflineDays:    30,
-	LogLevel:       Info,
-	ExportSchema:   "http",
-	ExportHost:     "",   // default is request ip
-	NewIndex:       true, // use new index page
-	JrebelWorkMode: 0,    // 0: auto, 1: force offline mode, 2: force online mode, 3: oldGuid
+	Port:             12345,
+	IgnoreOfflineDay: false,
+	OfflineDays:      30, // max 180 > 180 will cause invalid
+	LogLevel:         Info,
+	ExportSchema:     "http",
+	ExportHost:       "",   // default is request ip
+	NewIndex:         true, // use new index page
+	JrebelWorkMode:   0,    // 0: auto, 1: force offline mode, 2: force online mode, 3: oldGuid
 }
 
 var logger = NewLogger(os.Stdout, Info, log.Ldate|log.Ltime)
 
 func init() {
 	portPtr := flag.Int("port", config.Port, "Server port, value range 1-65535")
+	ignoreOfflineDay := flag.Bool("ignoreOfflineDay", config.IgnoreOfflineDay, "Ignore plugin offline day parameter, if true force return offlineDays parameter. default: false")
+	offlineDays := flag.Int64("offlineDays", config.OfflineDays, "Custom return offline days parameter, Recommended not to exceed 180 days. default: 30")
 	logLevelPtr := flag.Int64("logLevel", config.LogLevel, "Log level, value range 1-4")
 	exportSchemaPtr := flag.String("exportSchema", config.ExportSchema, "Index page export schema (http or https)")
 	exportHostPtr := flag.String("exportHost", "", "Index page export host, ip or domain")
 	newIndexPtr := flag.Bool("newIndex", config.NewIndex, "Use New Index Page (true or false)")
-	jrebelWorkMode := flag.Int("jrebelWorkMode", config.JrebelWorkMode, "Jrebel Wrok mode. 0: auto, 1: force offline mode, 2: force online mode, 3: oldGuid")
+	jrebelWorkMode := flag.Int("jrebelWorkMode", config.JrebelWorkMode, "Jrebel Work mode. 0: auto, 1: force offline mode, 2: force online mode, 3: oldGuid")
 
 	flag.Parse()
 
 	config.Port = *portPtr
+	config.IgnoreOfflineDay = *ignoreOfflineDay
+	config.OfflineDays = *offlineDays
 	config.LogLevel = *logLevelPtr
 	config.ExportSchema = *exportSchemaPtr
 	config.ExportHost = *exportHostPtr
