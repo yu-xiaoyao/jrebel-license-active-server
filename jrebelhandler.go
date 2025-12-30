@@ -407,6 +407,11 @@ const indexTemplateHtml = `<!DOCTYPE html>
             padding: 10px;
             margin: 10px 0;
             position: relative;
+            cursor: pointer; /* 添加指针光标提示可点击 */
+        }
+
+        .activation-url:hover {
+            background-color: #f9f9f9; /* 鼠标悬停效果 */
         }
 
         .url-text {
@@ -418,6 +423,25 @@ const indexTemplateHtml = `<!DOCTYPE html>
         .highlight {
             color: var(--accent-color);
             font-weight: bold;
+        }
+
+        .copy-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .copy-btn:hover {
+            background-color: #3a5bd0;
+        }
+
+        .copy-btn.copied {
+            background-color: #4CAF50;
         }
 
         footer {
@@ -435,6 +459,27 @@ const indexTemplateHtml = `<!DOCTYPE html>
 
         footer a:hover {
             text-decoration: underline;
+        }
+
+        /* 添加提示框样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+            z-index: 1000;
+            pointer-events: none; /* 防止提示框干扰点击 */
+        }
+
+        .toast.show {
+            opacity: 0.9;
+            bottom: 30px;
         }
 
         @media (max-width: 768px) {
@@ -455,6 +500,20 @@ const indexTemplateHtml = `<!DOCTYPE html>
                 margin-top: 10px;
                 text-align: right;
             }
+
+            .activation-url {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .url-text {
+                margin-bottom: 10px;
+            }
+
+            .copy-btn {
+                margin-left: 0;
+                align-self: flex-end; /* 按钮对齐到右侧 */
+            }
         }
     </style>
 </head>
@@ -468,35 +527,91 @@ const indexTemplateHtml = `<!DOCTYPE html>
         <div class="info-card">
             <h2>Server Information</h2>
             <p>License Server started at:</p>
-            <div class="activation-url">
+            <div class="activation-url" onclick="copyToClipboard('{{.Host}}')">
                 <span class="url-text">{{.Host}}</span>
+                <button class="copy-btn" onclick="copyToClipboard(event, '{{.Host}}')">Copy</button>
             </div>
         </div>
 
         <div class="info-card">
             <h2>JRebel 7.1 and Earlier Versions</h2>
             <p>Activation address (with any email):</p>
-            <div class="activation-url">
+            <div class="activation-url" onclick="copyToClipboard('{{.Host}}/{tokenname}')">
                 <span class="url-text">{{.Host}}/<span class="highlight">{tokenname}</span></span>
+                <button class="copy-btn" onclick="copyToClipboard(event, '{{.Host}}/{tokenname}')">Copy</button>
             </div>
         </div>
 
         <div class="info-card">
             <h2>JRebel 2018.1 and Later Versions</h2>
             <p>Activation address (with any email address):</p>
-            <div class="activation-url">
+            <div class="activation-url" onclick="copyToClipboard('{{.Host}}/{{.UUID}}')">
                 <span class="url-text">{{.Host}}/<span class="highlight">{{.UUID}}</span></span>
+                <button class="copy-btn" onclick="copyToClipboard(event, '{{.Host}}/{{.UUID}}')">Copy</button>
             </div>
         </div>
     </div>
 
     <footer>
         <p>
-            <a href="https://github.com/yu-xiaoyao/jrebel-license-active-server" target="_blank">Developed from 2019
+            <a href="https://github.com/yu-xiaoyao/jrebel-license-active-server  " target="_blank">Developed from 2019
                 year</a>
         </p>
     </footer>
 </div>
+
+<!-- 提示框 -->
+<div id="toast" class="toast">Copied to clipboard!</div>
+
+<script>
+    function copyToClipboard(event, text) {
+        // 阻止事件冒泡，防止同时触发外层div的点击事件
+        if (event && event.stopPropagation) {
+            event.stopPropagation();
+        }
+
+        // 创建一个临时的textarea元素
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+
+        // 将textarea添加到body中
+        document.body.appendChild(textArea);
+
+        // 选中textarea中的文本
+        textArea.select();
+        textArea.setSelectionRange(0, 99999); // 对于移动端的兼容性
+
+        // 执行复制命令
+        document.execCommand('copy');
+
+        // 移除临时的textarea元素
+        document.body.removeChild(textArea);
+
+        // 获取点击的按钮元素
+        const button = event.target.tagName === 'BUTTON' ? event.target : event.target.parentElement.querySelector('.copy-btn');
+
+        // 临时改变按钮文字和颜色
+        const originalText = button.textContent;
+        const originalClass = button.className;
+        button.textContent = 'Copied!';
+        button.className = 'copy-btn copied';
+
+        // 恢复按钮原始状态
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.className = originalClass;
+        }, 2000);
+
+        // 显示提示框
+        const toast = document.getElementById('toast');
+        toast.className = 'toast show'; // 添加 'show' 类来触发动画
+
+        // 3秒后隐藏提示框
+        setTimeout(() => {
+            toast.className = 'toast';
+        }, 3000);
+    }
+</script>
 
 </body>
 </html>`
