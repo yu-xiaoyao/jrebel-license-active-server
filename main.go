@@ -4,9 +4,7 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net/http"
-	"os"
 	"strconv"
 )
 
@@ -14,7 +12,9 @@ type Config struct {
 	Port             int
 	OfflineDays      int64
 	IgnoreOfflineDay bool
-	LogLevel         int64
+	LogLevel         Level
+	LogFile          bool
+	LogPath          string
 	ExportSchema     string
 	ExportHost       string
 	NewIndex         bool
@@ -26,19 +26,28 @@ var config = &Config{
 	IgnoreOfflineDay: false,
 	OfflineDays:      30, // max 180 > 180 will cause invalid
 	LogLevel:         Info,
+	LogFile:          false,
+	LogPath:          "./logs",
 	ExportSchema:     "http",
 	ExportHost:       "",   // default is request ip
 	NewIndex:         true, // use new index page
 	JrebelWorkMode:   0,    // 0: auto, 1: force offline mode, 2: force online mode, 3: oldGuid
 }
 
-var logger = NewLogger(os.Stdout, Info, log.Ldate|log.Ltime)
+// var logger = NewLogger(os.Stdout, Info, log.Ldate|log.Ltime)
+var logger ILogger
 
 func init() {
 	portPtr := flag.Int("port", config.Port, "Server port, value range 1-65535")
 	ignoreOfflineDay := flag.Bool("ignoreOfflineDay", config.IgnoreOfflineDay, "Ignore plugin offline day parameter, if true force return offlineDays parameter. default: false")
 	offlineDays := flag.Int64("offlineDays", config.OfflineDays, "Custom return offline days parameter, Recommended not to exceed 180 days. default: 30")
-	logLevelPtr := flag.Int64("logLevel", config.LogLevel, "Log level, value range 1-4")
+	//logLevelPtr := flag.Int64("logLevel", config.LogLevel, "Log level, value range 1-4")
+	var logLevel = Info
+	flag.Var(&logLevel, "level", "Log level, value range 0-5")
+
+	logFile := flag.Bool("logFile", config.LogFile, "Log to File")
+	logPath := flag.String("logPath", config.LogPath, "Save log file path")
+
 	exportSchemaPtr := flag.String("exportSchema", config.ExportSchema, "Index page export schema (http or https)")
 	exportHostPtr := flag.String("exportHost", "", "Index page export host, ip or domain")
 	newIndexPtr := flag.Bool("newIndex", config.NewIndex, "Use New Index Page (true or false)")
@@ -49,13 +58,20 @@ func init() {
 	config.Port = *portPtr
 	config.IgnoreOfflineDay = *ignoreOfflineDay
 	config.OfflineDays = *offlineDays
-	config.LogLevel = *logLevelPtr
+	config.LogFile = *logFile
+	config.LogPath = *logPath
 	config.ExportSchema = *exportSchemaPtr
 	config.ExportHost = *exportHostPtr
 	config.NewIndex = *newIndexPtr
 	config.JrebelWorkMode = *jrebelWorkMode
 
-	logger.SetLevel(config.LogLevel)
+	config.LogLevel = logLevel
+
+	if config.LogFile {
+		logger = NewFileLogger(*logPath, 100, 7, logLevel, 0)
+	} else {
+		logger = NewConsoleLogger(logLevel, 0)
+	}
 }
 
 func main() {
